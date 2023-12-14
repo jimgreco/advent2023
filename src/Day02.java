@@ -2,6 +2,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * Solution Description:
+ * <ul>
+ *     <li>Part 1: String parsing.
+ *         String parsing is used to extract the color and value of each roll.
+ *         Each color's value is validated against the maximum allowed value for that color.
+ *         A roll is only counted toward the solution if all color values are under the maximum allowed values.
+ *     <li>Part 2: String parsing.
+ *         The same string parsing is used and the minimum value for each color in a set of rolls is tracked.
+ * </ul>
+ */
 public class Day02 {
 
     private static final int RED = 12;

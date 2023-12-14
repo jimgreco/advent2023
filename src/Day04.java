@@ -1,14 +1,24 @@
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * Solution Description:
+ * <ul>
+ *     <li>Part 1: String parsing.
+ *         Each line is parsed to record the number of winning numbers for each game.
+ *     <li>Part 2: Recursive DFS on a graph and memoization.
+ *         The cards can be modeled as a directed acyclic graph and searched using DFS.
+ *         Each winning card is recursively evaluated for the number of winning cards, which in turn have their own
+ *         winning cards.
+ *         Memoization is used to ensure this task can be completed in O(n) due to the number of repetitive
+ *         calculations on nodes.
+ * </ul>
+ */
 public class Day04 {
 
     public static void main(String[] args) throws IOException {
@@ -43,21 +53,21 @@ public class Day04 {
         } else {
             var memo = new HashMap<Integer, Integer>();
             for (var i = 0; i < cardWins.length; i++) {
-                sum += recursive(cardWins, i, memo);
+                sum += dfs(cardWins, i, memo);
             }
         }
 
         System.out.println(sum);
     }
 
-    private static int recursive(int[] cardWins, int card, Map<Integer, Integer> memo) {
+    private static int dfs(int[] cardWins, int card, Map<Integer, Integer> memo) {
         if (memo.containsKey(card)) {
             return memo.get(card);
         }
 
         var cards = 1;
         for (var i = 0; i < cardWins[card]; i++) {
-            cards += recursive(cardWins, card + 1 + i, memo);
+            cards += dfs(cardWins, card + 1 + i, memo);
         }
 
         memo.put(card, cards);

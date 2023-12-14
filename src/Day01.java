@@ -3,6 +3,24 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+/**
+ * Solution Description:
+ * <ul>
+ *      <li>Part 1: Linear scan of characters.
+ *          The first number is identified by scanning forwards from the first index of the string for number
+ *          characters.
+ *          The second number is identified by scanning backwards from the last index of the string for number
+ *          characters.
+ *          Number characters are '0' to '9' in ASCII.
+ *          The number characters are converted to integers and combined to form the answer for each line.
+ *      <li>Part 2: Linear scan of characters and string lookup.
+ *          The same front-to-back and back-to-front scans for number characters are done as Part 1.
+ *          Additionally, a lookup of the last 3, 4, and 5 characters are done against a collection of numbers spelled
+ *          out (e.g., "one", "two", ..., "nine").
+ *          Note: This method is acceptable for this constrained problem, but a sliding window of hash calculations
+ *          should be used for a larger collection of words.
+ * </ul>
+ */
 public class Day01 {
 
     private static final List<String> NUMBERS = List.of(

@@ -6,6 +6,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Solution Description:
+ * <ul>
+ *     <li>Part 1: Inline integer string parsing and area search.
+ *         The text is turned into a matrix and each row of the matrix is parsed, inline, for numbers.
+ *         For each character of a number, the surrounding 8 boxes are search for symbols.
+ *     <li>Part 2: Inline integer string parsing and area search.
+ *         Similar parse and search methods are used as Part 1.
+ *         The number of times each gear (*) is associated with a number is recorded in a map.
+ *         That map is then searched for gears that have exactly two associated associated numbers.
+ * </ul>
+ */
 public class Day03 {
 
     public static void main(String[] args) throws IOException {
@@ -63,7 +75,7 @@ public class Day03 {
         return false;
     }
 
-    private static Object doPart2(char[][] chars) {
+    private static int doPart2(char[][] chars) {
         var gearPartNumbers = new HashMap<RowCol, List<Integer>>();
 
         for (var i = 0; i < chars.length; i++) {
