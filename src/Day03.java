@@ -9,10 +9,10 @@ import java.util.Objects;
 /**
  * Solution Description:
  * <ul>
- *     <li>Part 1: Inline integer string parsing and area search.
+ *     <li>Part 1: Inline integer string parsing.
  *         The text is turned into a matrix and each row of the matrix is parsed, inline, for numbers.
  *         For each character of a number, the surrounding 8 boxes are search for symbols.
- *     <li>Part 2: Inline integer string parsing and area search.
+ *     <li>Part 2: Inline integer string parsing.
  *         Similar parse and search methods are used as Part 1.
  *         The number of times each gear (*) is associated with a number is recorded in a map.
  *         That map is then searched for gears that have exactly two associated associated numbers.

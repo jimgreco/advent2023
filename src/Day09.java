@@ -8,13 +8,10 @@ import java.util.List;
 /**
  * Solution Description:
  * <ul>
- *     <li>Part 1: Recursion.
+ *     <li>Part 1 and 2: Recursion.
  *         Recursively calculate the difference between sequential pairs of numbers until the difference between numbers
  *         is all zeros.
- *         Each recursion function call then returns the new interpolated value.
- *     <li>Part 2: Recursion.
- *         The same process as part 1 is used except the first element of the difference is used to compute the
- *         interpolated number.
+ *         Each recursion function call then returns the new interpolated value (part 1: 1st value, part 2: last value).
  * </ul>
  */
 public class Day09 {

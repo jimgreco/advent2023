@@ -7,14 +7,12 @@ import java.util.List;
 /**
  * Solution Description:
  * <ul>
- *     <li>Part 1: Binary search.
+ *     <li>Part 1 and 2: Binary search.
  *         The distance the boat goes in the race is y(x) = x * (c - x) = -x^2 + cx, where x is the time spent winding
  *         the boat and c is the length of the race.
  *         Solve for the two values of x to find the lower and upper bound on the time wound.
  *         A discrete solution can be found using two binary searches from the midpoint of c since the derivative of
  *         the function is y'(x) = -2x + c and solving for y'(x) = 0 results in x = c / 2.
- *     <li>Part 2: Binary search.
- *         No changes required to the algorithm.
  * </ul>
  */
 public class Day06 {

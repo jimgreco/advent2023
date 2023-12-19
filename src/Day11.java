@@ -6,13 +6,10 @@ import java.util.ArrayList;
 /**
  * Solution Description:
  * <ul>
- *     <li>Part 1: Path traversal.
+ *     <li>Part 1 and 2: Path traversal.
  *         Find the Manhattan distance between each pair of galaxies.
  *         The distance between two points, one row or one column apart, is 1 unless the entire row or entire column
- *         does not have a galaxy in which case the distance is 2.
- *     <li>Part 2: Path traversal.
- *         Part 2 uses the same algorithm as Part 1 except a distance of 1000000 is used for no galaxy in a row or
- *         column.
+ *         does not have a galaxy in which case the distance is 2 (100,000 in part 2).
  * </ul>
  */
 public class Day11 {
