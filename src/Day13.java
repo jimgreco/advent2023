@@ -10,6 +10,8 @@ import java.util.ArrayList;
  *         A search is conducted for mirrored rows, followed by mirrored columns by comparing pairs of rows/columns.
  *         Part 1 looks for an exact match.
  *         Part 2 looks for a match with one error.
+ *         Note: You could do tricks with bitmasks to make the comparison faster, but the problem is heavily constrained
+ *               in size,
  * </ul>
  */
 public class Day13 {

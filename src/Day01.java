@@ -18,7 +18,8 @@ import java.util.List;
  *          Additionally, a lookup of the last 3, 4, and 5 characters are done against a collection of numbers spelled
  *          out (e.g., "one", "two", ..., "nine").
  *          Note: This method is acceptable for this constrained problem, but a sliding window of hash calculations
- *          should be used for a larger collection of words.
+ *                should be used for a larger collection of words.
+ *                Regex would work for the constrained problem, but would not scale to a larger collection of words.
  * </ul>
  */
 public class Day01 {

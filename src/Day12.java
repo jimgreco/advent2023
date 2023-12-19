@@ -9,10 +9,8 @@ import java.util.Objects;
 /**
  * Solution Description:
  * <ul>
- *     <li>Part 1: Backtrack and memoization.
+ *     <li>Part 1 and 2: Backtrack and memoization.
  *         A backtracking algorithm, with early escape, and memoization is used to test all possible combinations.
- *     <li>Part 2: Backtracking and memoization.
- *         No changes to the algorithm.
  * </ul>
  */
 public class Day12 {
