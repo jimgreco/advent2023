@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 
 /**
  * Solution Description:
@@ -8,11 +9,10 @@ import java.nio.file.Path;
  *     <li>Part 1: Path traversal.
  *         The loop is traversed all the way around.
  *         The farthest distance is half the number of segments traversed.
- *     <li>Part 2: Shoelace theorem.
- *         The loop is traversed and the pipe is marked to form the boundary of a polygon.
- *         Each row is then scanned for the presence of the pipe.
- *         The shoelace theorem is applied to mark the points inside and outside the polygon made up by the polygon.
- *         Note: There's a bug in here somewhere due to the discrete nature of the boundary.
+ *     <li>Part 2: Shoelace algo.
+ *         The input is parsed to extract the vertices of the boundary that defines the polygon.
+ *         The shoelace algo is then applied to get the area of the polygon from the vertices.
+ *         The area of the polygon minus the length of boundary is the total area.
  * </ul>
  */
 public class Day10 {
@@ -24,13 +24,13 @@ public class Day10 {
         var lines = Files.readAllLines(Path.of(args[1]));
 
         var grid = new char[lines.size()][];
-        Coordinate start = null;
+        Coord start = null;
         for (var i = 0; i < lines.size(); i++) {
             var line = lines.get(i);
             if (start == null) {
                 var col = line.indexOf('S');
                 if (col != -1) {
-                    start = new Coordinate(i, col);
+                    start = new Coord(i, col);
                 }
             }
             grid[i] = line.toCharArray();
@@ -45,8 +45,8 @@ public class Day10 {
         }
     }
 
-    private static int doPart1(char[][] grid, Coordinate start) {
-        Coordinate current = findStartPipe(grid, start);
+    private static int doPart1(char[][] grid, Coord start) {
+        Coord current = findStartPipe(grid, start);
         var last = start;
 
         var steps = 1;
@@ -60,44 +60,39 @@ public class Day10 {
         return steps / 2 + ((steps % 2 == 1) ? 1 : 0);
     }
 
-    private static int doPart2(char[][] grid, Coordinate start) {
-         var current = findStartPipe(grid, start);
-        var first = current;
+    private static int doPart2(char[][] grid, Coord start) {
+        var current = findStartPipe(grid, start);
         var last = start;
+
+        var vertices = new ArrayList<Coord>();
+        vertices.add(start);
         while (grid[current.row][current.col] != 'S') {
-            if (grid[last.row][last.col] == 'F' || grid[last.row][last.col] == 'L' || grid[last.row][last.col] == '|') {
-                grid[last.row][last.col] = 'P';
-            }
+            vertices.add(current);
             var newCurrent = traversePipe(grid, last, current);
             last = current;
             current = newCurrent;
         }
-        if (first.row != last.row && first.col == last.col) {
-            grid[start.row][start.col] = 'P';
-        } else if (first.row == last.row - 1 && first.col == last.col + 1) {
-            grid[start.row][start.col] = 'P';
-        }else if (first.row == last.row + 1 && first.col == last.col + 1) {
-            grid[start.row][start.col] = 'P';
-        }
+        vertices.add(current);
 
-        var inside = false;
-        var insideCount = 0;
-        for (var i = 0; i < grid.length; i++) {
-            for (var j = 0; j < grid[i].length; j++) {
-                var isPipe = grid[i][j];
-                if (isPipe == 'P') {
-                    inside = !inside;
-                } else if (inside) {
-                    insideCount++;
-                }
-            }
-
+        var border = 0;
+        var one = 0;
+        var two = 0;
+        for (var i = 0; i < vertices.size() - 1; i++) {
+            var curr = vertices.get(i);
+            var next = vertices.get(i + 1);
+            one += curr.col * next.row;
+            two += curr.row * next.col;
+            border += Math.abs(next.row - curr.row);
+            border += Math.abs(next.col - curr.col);
         }
-        return insideCount;
+        var inside = Math.abs(one - two);
+
+        var totalArea = inside / 2 + 1 - border / 2;
+        return totalArea;
     }
 
-    private static Coordinate findStartPipe(char[][] grid, Coordinate start) {
-        Coordinate current = null;
+    private static Coord findStartPipe(char[][] grid, Coord start) {
+        Coord current = null;
         for (var path : DIRECTIONS) {
             current = findStartPipe(grid, start, path[0], path[1]);
             if (current != null) {
@@ -107,7 +102,7 @@ public class Day10 {
         return current;
     }
 
-    private static Coordinate findStartPipe(char[][] grid, Coordinate start, int i, int j) {
+    private static Coord findStartPipe(char[][] grid, Coord start, int i, int j) {
         var row = start.row + i;
         var col = start.col + j;
         if (row >= 0 && row < grid.length && col >= 0 && col < grid[row].length) {
@@ -116,28 +111,28 @@ public class Day10 {
                     || (col > start.col && (c == 'J' || c == '-' || c == '7'))    // east
                     || (row < start.row && (c == '7' || c == '|' || c == 'F'))    // north
                     || (row > start.row && (c == 'J' || c == '|' || c == 'L'))) { // south
-                return new Coordinate(row, col);
+                return new Coord(row, col);
             }
         }
         return null;
     }
 
-    private static Coordinate traversePipe(char[][] grid, Coordinate last, Coordinate current) {
+    private static Coord traversePipe(char[][] grid, Coord last, Coord current) {
         var c = grid[current.row][current.col];
 
         var diffRow = current.row - last.row;
         var diffCol = current.col - last.col;
 
         if (c == '-' || c == '|') { // move east/west
-            return new Coordinate(current.row + diffRow, current.col + diffCol);
+            return new Coord(current.row + diffRow, current.col + diffCol);
         } else if (c == '7' || c == 'L') { // move south/east
-            return new Coordinate(current.row + diffCol, current.col + diffRow);
+            return new Coord(current.row + diffCol, current.col + diffRow);
         } else if (c == 'J' || c == 'F') {
-            return new Coordinate(current.row - diffCol, current.col - diffRow);
+            return new Coord(current.row - diffCol, current.col - diffRow);
         }
         throw new IllegalArgumentException();
     }
 
-    private record Coordinate(int row, int col) {
+    private record Coord(int row, int col) {
     }
 }
