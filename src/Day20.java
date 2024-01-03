@@ -8,103 +8,100 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
+/**
+ * Solution Description:
+ * <ul>
+ *     <li>Part 1: Graph traversal.
+ *         The module file is interpreted as a graph and the graph is traversed 1,000 times.
+ *     <li>Part 2: Graph traversal, least common multiple.
+ *         "rx" will receive a low pulse if it's parent, a conjunction module, receive a high pulse from all of its
+ *         children.
+ *         Each grandchild is measured to see when it first sends a high pulse.
+ *         The least common multiple of the grandchildren is the total number of iterations required for the parent to
+ *         send a low pulse.
+ * </ul>
+ */
 public class Day20 {
 
     public static void main(String[] args) throws IOException {
         var part1 = args[0].equals("1");
         var lines = Files.readAllLines(java.nio.file.Path.of(args[1]));
 
-        var flipFlops = new HashMap<String, FlipFlopModule>();
-        var conjunctions = new HashMap<String, ConjunctionModule>();
-        String[] broadcaster = null;
-
+        var mods = new HashMap<String, Mod>();
         for (var line : lines) {
             var split = line.split(" -> ");
-            var module = split[0];
-            var type = module.charAt(0);
+            var name = split[0];
+            var type = name.charAt(0);
             var destinations = split[1].split(", ");
 
-            var name = module.substring(1);
             if (type == '%') {
-                flipFlops.put(name, new FlipFlopModule(name, destinations));
+                mods.put(name.substring(1), new FlipMod(name.substring(1), destinations));
             } else if (type == '&') {
-                conjunctions.put(name, new ConjunctionModule(name, destinations));
+                mods.put(name.substring(1), new ConjMod(name.substring(1), destinations));
             } else {
-                broadcaster = destinations;
+                mods.put(name, new Mod(name, destinations));
+            }
+        }
+        mods.put("button", new Mod("button", new String[]{ "broadcaster" })); // start
+        mods.put("rx", new Mod("rx", new String[]{}));                        // finish
+
+        for (var mod : mods.values()) {
+            for (var dest : mod.dests) {
+                var destMod = mods.get(dest);
+                if (!destMod.srcs.contains(mod.name)) {
+                    destMod.srcs.add(mod.name);
+                }
+                if (destMod instanceof ConjMod) {
+                    ((ConjMod) destMod).srcPulses.put(mod.name, false);
+                }
             }
         }
 
-        var rx = new FlipFlopModule("rx", new String[]{});
-        flipFlops.put("rx", rx);
-        for (var entry : flipFlops.entrySet()) {
-            addSrcDest(entry.getKey(), entry.getValue(), flipFlops, conjunctions);
-        }
-        for (var entry : conjunctions.entrySet()) {
-            addSrcDest(entry.getKey(), entry.getValue(), flipFlops, conjunctions);
-        }
-
-        var result = part1 ? doPart1(flipFlops, conjunctions, broadcaster)
-                : doPart2(flipFlops, conjunctions, broadcaster);
+        var result = part1 ? doPart1(mods) : doPart2(mods);
         System.out.println(result);
     }
 
-    private static void addSrcDest(
-            String moduleName,
-            Module module,
-            HashMap<String, FlipFlopModule> flipFlops,
-            HashMap<String, ConjunctionModule> conjunctions) {
-        for (var dest : module.destinations) {
-            List<String> sources = null;
-            if (flipFlops.containsKey(dest)) {
-                sources = flipFlops.get(dest).sources;
-            } else if (conjunctions.containsKey(dest)) {
-                sources = conjunctions.get(dest).sources;
-                conjunctions.get(dest).sourcePulses.put(moduleName, false);
-            }
-            if (!sources.contains(moduleName)) {
-                sources.add(moduleName);
-            }
-        }
-    }
-
-    private static long doPart1(
-            HashMap<String, FlipFlopModule> flipFlops,
-            HashMap<String, ConjunctionModule> conjunctions,
-            String[] broadcaster) {
+    private static long doPart1(Map<String, Mod> mods) {
         var totalLow = 0L;
         var totalHigh = 0L;
         for (var k = 0; k < 1000; k++) {
-            var results = pressButton(flipFlops, conjunctions, broadcaster);
+            var results = pressButton(mods);
             totalLow += results[0];
             totalHigh += results[1];
         }
         return totalLow * totalHigh;
     }
 
-    private static long doPart2(
-            HashMap<String, FlipFlopModule> flipFlops,
-            HashMap<String, ConjunctionModule> conjunctions,
-            String[] broadcaster) {
-        var rx = flipFlops.get("rx");
+    private static long doPart2(Map<String, Mod> mods) {
+        var rx = mods.get("rx");
+        var parent = mods.get(rx.srcs.getFirst());
+        var grandparent = parent.srcs.stream().map(mods::get).toList();
+        var grandparentFirstPress = new HashMap<String, Long>();
+        for (var grandchild : grandparent) {
+            grandparentFirstPress.put(grandchild.name, 0L);
+        }
 
         var presses = 0L;
-        while (true) {
-            rx.lowPulses = 0;
-            pressButton(flipFlops, conjunctions, broadcaster);
+        while (grandparentFirstPress.values().stream().anyMatch(x -> x == 0)) {
+            grandparent.forEach(x -> x.sentHighPulses = 0);
+            pressButton(mods);
             presses++;
-            if (conjunctions.get("tj").sourcePulses.values().stream().anyMatch(x -> x)) {
-                System.out.println(presses + ":" + conjunctions.get("tj").sourcePulses.values().stream().filter(x -> x).count());
-            }
-            if (rx.lowPulses == 1) {
-                return presses;
+
+            for (var grandchild : grandparent) {
+                if (grandchild.sentHighPulses == 1 && grandparentFirstPress.get(grandchild.name) == 0) {
+                    grandparentFirstPress.put(grandchild.name, presses);
+                }
             }
         }
+
+        var product = 1L;
+        for (var value : grandparentFirstPress.values()) {
+            product *= value;
+        }
+        return product;
     }
 
-    private static long[] pressButton(
-            HashMap<String, FlipFlopModule> flipFlops,
-            HashMap<String, ConjunctionModule> conjunctions,
-            String[] broadcaster) {
+    private static long[] pressButton(Map<String, Mod> mods) {
         var lowPulses = 0L;
         var highPulses = 0L;
         Queue<Pulse> queue = new LinkedList<>();
@@ -120,24 +117,32 @@ public class Day20 {
                     lowPulses++;
                 }
 
-                if (flipFlops.containsKey(pulse.destination)) {
-                    var module = flipFlops.get(pulse.destination);
+                var mod = mods.get(pulse.dest);
+                if (mod instanceof FlipMod flip) {
                     if (!pulse.high) {
-                        module.lowPulses++;
-                        module.on = !module.on;
-                        for (var dest : module.destinations) {
-                            queue.add(new Pulse(pulse.destination, dest, module.on));
+                        flip.on = !flip.on;
+                        for (var dest : flip.dests) {
+                            queue.add(new Pulse(pulse.dest, dest, flip.on));
+                            if (flip.on) {
+                                mod.sentHighPulses++;
+                            }
                         }
                     }
-                } else if (conjunctions.containsKey(pulse.destination)) {
-                    var module = conjunctions.get(pulse.destination);
-                    module.sourcePulses.put(pulse.source, pulse.high);
-                    for (var dest : module.destinations) {
-                        queue.add(new Pulse(pulse.destination, dest, !module.isAllHigh()));
+                } else if (mod instanceof ConjMod conj) {
+                    conj.srcPulses.put(pulse.src, pulse.high);
+                    for (var dest : conj.dests) {
+                        var sendHighPulse = !conj.isAllHigh();
+                        queue.add(new Pulse(pulse.dest, dest, sendHighPulse));
+                        if (sendHighPulse) {
+                            mod.sentHighPulses++;
+                        }
                     }
-                } else if (pulse.destination.equals("broadcaster")) {
-                    for (var dest : broadcaster) {
-                        queue.add(new Pulse(pulse.destination, dest, pulse.high));
+                } else {
+                    for (var dest : mod.dests) {
+                        queue.add(new Pulse(pulse.dest, dest, pulse.high));
+                        if (pulse.high) {
+                            mod.sentHighPulses++;
+                        }
                     }
                 }
             }
@@ -145,43 +150,43 @@ public class Day20 {
         return new long[] { lowPulses, highPulses };
     }
 
-    private record Pulse(String source, String destination, boolean high) {}
+    private record Pulse(String src, String dest, boolean high) {}
 
-    private static class Module {
+    private static class Mod {
 
         String name;
-        List<String> sources;
-        List<String> destinations;
-        int lowPulses;
+        List<String> srcs;
+        List<String> dests;
+        int sentHighPulses;
 
-        public Module(String name, String[] destinations) {
+        public Mod(String name, String[] dests) {
             this.name = name;
-            this.destinations = Arrays.stream(destinations).toList();
-            sources = new ArrayList<>();
+            this.dests = Arrays.stream(dests).toList();
+            srcs = new ArrayList<>();
         }
     }
 
-    private static class FlipFlopModule extends Module {
+    private static class FlipMod extends Mod {
 
         boolean on;
 
-        FlipFlopModule(String name, String[] destinations) {
+        FlipMod(String name, String[] destinations) {
             super(name, destinations);
         }
     }
 
-    private static class ConjunctionModule extends Module {
+    private static class ConjMod extends Mod {
 
-        final Map<String, Boolean> sourcePulses;
+        final Map<String, Boolean> srcPulses;
 
-        ConjunctionModule(String name, String[] destinations) {
+        ConjMod(String name, String[] destinations) {
             super(name, destinations);
-            sourcePulses = new HashMap<>();
+            srcPulses = new HashMap<>();
         }
 
         boolean isAllHigh() {
             var high = true;
-            for (var src : sourcePulses.values()) {
+            for (var src : srcPulses.values()) {
                 high &= src;
             }
             return high;
